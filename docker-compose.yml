@@ -23,8 +23,8 @@ services:
       - "6541:5432"
     environment:
       - POSTGRES_DB=stats
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=iamroot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=iamroot
 
   ewm-service:
     build: ./main-service
