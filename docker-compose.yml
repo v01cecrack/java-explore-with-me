@@ -9,9 +9,10 @@ services:
     depends_on:
       - stats-db
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/events
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=iamroot
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats
+      - STATS-SERVER-URL=http://localhost:9090
 
   stats-db:
     image: postgres:14-alpine
@@ -21,9 +22,9 @@ services:
     ports:
       - "6541:5432"
     environment:
-      - POSTGRES_DB=events
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=iamroot
+      - POSTGRES_DB=stats
+        - POSTGRES_USER=root
+        - POSTGRES_PASSWORD=root
 
   ewm-service:
     build: ./main-service
