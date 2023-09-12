@@ -13,7 +13,7 @@ public interface StatisticRepository extends JpaRepository<EndpointHit, Long> {
             "select new ru.practicum.service.dto.StatsDto(eh.app, eh.uri, count(eh.ip)) " +
                     "from EndpointHit eh " +
                     "where eh.timestamp between :start and :end " +
-                    "and eh.uri in :uris " +
+                    "and (coalesce(:uris, null) is null or eh.uri IN :uris) " +
                     "group by eh.app, eh.uri " +
                     "order by count(eh.ip) desc"
     )
@@ -25,7 +25,7 @@ public interface StatisticRepository extends JpaRepository<EndpointHit, Long> {
             "select new ru.practicum.service.dto.StatsDto(eh.app, eh.uri, count(distinct eh.ip)) " +
                     "from EndpointHit eh " +
                     "where eh.timestamp between :start and :end " +
-                    "and eh.uri in :uris " +
+                    "and (coalesce(:uris, null) is null or eh.uri in :uris) " +
                     "group by eh.app, eh.uri " +
                     "order by count(eh.ip) desc"
     )
