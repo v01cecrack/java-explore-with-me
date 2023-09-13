@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.service.dto.HitDto;
+import ru.practicum.service.dto.StatisticDto;
 import ru.practicum.service.dto.StatsDto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,11 +21,11 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     @Override
-    public List<StatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
-        if (unique) {
-            return statisticRepository.findStatsUnique(start, end, uris);
+    public List<StatsDto> getStats(StatisticDto dto) {
+        if (dto.getUnique()) {
+            return statisticRepository.findStatsUnique(dto.getStart(), dto.getEnd(), dto.getUris());
         } else {
-            return statisticRepository.findStats(start, end, uris);
+            return statisticRepository.findStats(dto.getStart(), dto.getEnd(), dto.getUris());
         }
     }
 }

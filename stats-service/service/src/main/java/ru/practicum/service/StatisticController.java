@@ -6,6 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.service.dto.HitDto;
+import ru.practicum.service.dto.StatisticDto;
 import ru.practicum.service.dto.StatsDto;
 
 import javax.validation.Valid;
@@ -13,7 +14,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping
 @Slf4j
 @RequiredArgsConstructor
 public class StatisticController {
@@ -34,6 +34,7 @@ public class StatisticController {
             @RequestParam(required = false) List<String> uris,
             @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("GET stats");
-        return statisticService.getStats(start, end, uris, unique);
+        StatisticDto dto = new StatisticDto(start, end, uris, unique);
+        return statisticService.getStats(dto);
     }
 }
