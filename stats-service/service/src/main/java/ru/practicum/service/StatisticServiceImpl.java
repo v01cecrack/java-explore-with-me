@@ -7,6 +7,7 @@ import ru.practicum.service.dto.HitDto;
 import ru.practicum.service.dto.StatisticDto;
 import ru.practicum.service.dto.StatsDto;
 
+import javax.validation.ValidationException;
 import java.util.List;
 
 @Service
@@ -22,10 +23,27 @@ public class StatisticServiceImpl implements StatisticService {
 
     @Override
     public List<StatsDto> getStats(StatisticDto dto) {
-        if (dto.getUnique()) {
-            return statisticRepository.findStatsUnique(dto.getStart(), dto.getEnd(), dto.getUris());
-        } else {
-            return statisticRepository.findStats(dto.getStart(), dto.getEnd(), dto.getUris());
+        List<StatsDto> viewStatsList;
+
+        if (dto.getStart().isAfter(dto.getEnd())) {
+            throw new ValidationException("Время начала не может быть позднее даты конца диапазона!");
         }
+        if (dto.getUris() == null || dto.getUris().isEmpty()) {
+            if (dto.getUnique()) {
+                viewStatsList = statisticRepository.findAllStatsByUniqIp(dto.getStart(), dto.getEnd());
+            } else {
+                viewStatsList = statisticRepository.findAllByDateBetween(dto.getStart(), dto.getEnd());
+            }
+        } else {
+            if (dto.getUnique()) {
+                viewStatsList = statisticRepository.findStatsByUrisByUniqIp(dto.getStart(), dto.getEnd(), dto.getUris());
+            } else {
+                viewStatsList = statisticRepository.findAllByDateBetween(dto.getStart(), dto.getEnd(), dto.getUris());
+            }
+
+        }
+
+        return viewStatsList;
+
     }
 }
