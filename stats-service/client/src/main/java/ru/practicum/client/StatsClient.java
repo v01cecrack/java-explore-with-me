@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
-import ru.practicum.service.dto.StatsDto;
+
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,7 +40,7 @@ public class StatsClient extends BaseClient {
     }
 
     public List<StatsDto> getStats(LocalDateTime start, LocalDateTime end,
-                                       List<String> uris, Boolean unique) {
+                                   List<String> uris, Boolean unique) {
 
         Map<String, Object> parameters = new HashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
