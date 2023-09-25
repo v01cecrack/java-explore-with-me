@@ -4,12 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.mainservice.event.dto.Criteria;
 import ru.practicum.mainservice.event.dto.EventFullDto;
 import ru.practicum.mainservice.event.dto.UpdateEventRequestDto;
 import ru.practicum.mainservice.event.model.State;
 import ru.practicum.mainservice.event.service.EventService;
 
+import javax.validation.ValidationException;
 import javax.validation.constraints.Min;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -27,8 +31,26 @@ public class AdminEventController {
                                              @RequestParam(required = false) String rangeEnd,
                                              @RequestParam(defaultValue = "0") Integer from,
                                              @RequestParam(defaultValue = "10") Integer size) {
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+        if (rangeStart != null) {
+            start = LocalDateTime.parse(rangeStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
+        if (rangeEnd != null) {
+            end = LocalDateTime.parse(rangeEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
 
-        return eventService.adminGetEvents(users, states, categories, rangeStart, rangeEnd, from, size);
+        Criteria criteria = Criteria.builder()
+                .users(users)
+                .states(states)
+                .categories(categories)
+                .from(from)
+                .size(size)
+                .rangeStart(start)
+                .rangeEnd(end)
+                .build();
+
+        return eventService.adminGetEvents(criteria);
     }
 
     @PatchMapping("/{eventId}")

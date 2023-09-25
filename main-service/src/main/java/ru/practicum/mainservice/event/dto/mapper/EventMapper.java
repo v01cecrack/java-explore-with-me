@@ -11,18 +11,19 @@ import ru.practicum.mainservice.event.model.Event;
 import ru.practicum.mainservice.event.model.Location;
 import ru.practicum.mainservice.event.model.State;
 import ru.practicum.mainservice.request.model.ParticipationRequestStatus;
+import ru.practicum.mainservice.request.model.Request;
 import ru.practicum.mainservice.users.dto.UserDto;
 import ru.practicum.mainservice.users.dto.UserMapper;
 import ru.practicum.mainservice.users.model.User;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @UtilityClass
 public class EventMapper {
 
     public static EventFullDto toEventFullDto(Event event) {
-        EventFullDto eventFullDto = EventFullDto.builder()
+        return EventFullDto.builder()
                 .annotation(event.getAnnotation())
                 .category(CategoriesMapper.toCategoryDto(event.getCategory()))
                 .createdOn(event.getCreatedOn())
@@ -37,26 +38,6 @@ public class EventMapper {
                 .state(event.getState())
                 .title(event.getTitle())
                 .location(LocationMapper.toLocationDto(event.getLocation()))
-                .build();
-        if (event.getParticipationRequests() != null && !event.getParticipationRequests().isEmpty()) {
-            eventFullDto.setConfirmedRequests(event.getParticipationRequests().stream()
-                             .filter(participationRequest -> participationRequest.getStatus() == ParticipationRequestStatus.CONFIRMED)
-                    .count());
-        } else eventFullDto.setConfirmedRequests(0L);
-        return eventFullDto;
-    }
-
-    public static NewEventDto toNewEventDtoDto(Event event) {
-        return NewEventDto.builder()
-                .annotation(event.getAnnotation())
-                .category(event.getCategory().getId())
-                .description(event.getDescription())
-                .eventDate(event.getEventDate())
-                .location(LocationMapper.toLocationDto(event.getLocation()))
-                .paid(event.getPaid())
-                .participantLimit(event.getParticipantLimit())
-                .requestModeration(event.getRequestModeration())
-                .title(event.getTitle())
                 .build();
     }
 
@@ -102,33 +83,5 @@ public class EventMapper {
                 .build();
     }
 
-    public EventFullDto mapToFullDto(Event event) {
-        EventFullDto dto = new EventFullDto();
-        dto.setAnnotation(event.getAnnotation());
-        dto.setCategory(CategoriesMapper.toCategoryDto(event.getCategory()));
-        dto.setCreatedOn(event.getCreatedOn());
-        dto.setDescription(event.getDescription());
-        dto.setEventDate(event.getEventDate());
-        dto.setId(event.getId());
-        dto.setInitiator(UserMapper.toUserDto(event.getInitiator()));
-        dto.setLocation(LocationMapper.toLocationDto(event.getLocation()));
-        dto.setPaid(event.getPaid());
-        dto.setParticipantLimit(event.getParticipantLimit());
-        dto.setPublishedOn(event.getPublishedOn());
-        dto.setRequestModeration(event.getRequestModeration());
-        dto.setState(event.getState());
-        dto.setTitle(event.getTitle());
-        dto.setConfirmedRequests(event.getConfirmedRequests());
-        dto.setViews(event.getViews());
-        return dto;
-    }
-
-    public List<EventFullDto> mapToFullDto(Iterable<Event> events) {
-        List<EventFullDto> result = new ArrayList<>();
-        for (Event event : events) {
-            result.add(mapToFullDto(event));
-        }
-        return result;
-    }
 }
 

@@ -1,13 +1,15 @@
 package ru.practicum.mainservice.event.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import ru.practicum.mainservice.event.model.SortEvents;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class CriteriaPublic {
     private String text;

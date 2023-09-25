@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.StatsClient;
+import ru.practicum.client.StatsDto;
 import ru.practicum.mainservice.StatisticClient;
 import ru.practicum.mainservice.categories.model.Categories;
 import ru.practicum.mainservice.categories.repository.CategoriesRepository;
@@ -29,78 +32,59 @@ import ru.practicum.mainservice.users.repository.UserRepository;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
-    private final StatisticClient statsClient;
+    private final StatisticClient statisticClient;
     private final CategoriesRepository categoriesRepository;
     private final RequestRepository requestRepository;
     private final CustomBuiltEventRepository customBuiltEventRepository;
     private final LocationRepository locationRepository;
+    private final StatsClient statsClient;
+    private static final int YEARS_OFFSET = 100;
 
 
     @Override
-    public List<EventShortDto> getEvents(String text, List<Long> categories, Boolean paid,
-                                         LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                         Boolean onlyAvailable, SortEvents sort, Integer from, Integer size,
-                                         HttpServletRequest request) {
-
-        if (rangeStart != null && rangeEnd != null) {
-            if (rangeStart.isAfter(rangeEnd)) {
-                throw new ValidationException(String.format("Дата начала %s позже даты завершения %s.", rangeStart, rangeEnd));
+    public List<EventShortDto> getEvents(CriteriaPublic criteria, HttpServletRequest request) {
+        if (criteria.getRangeStart() != null && criteria.getRangeEnd() != null) {
+            if (criteria.getRangeStart().isAfter(criteria.getRangeEnd())) {
+                throw new ValidationException(String.format("Дата начала %s позже даты завершения %s.", criteria.getRangeStart(), criteria.getRangeEnd()));
             }
         }
 
-        CriteriaPublic criteria = CriteriaPublic.builder()
-                .text(text)
-                .categories(categories)
-                .paid(paid)
-                .onlyAvailable(onlyAvailable)
-                .sort(sort)
-                .from(from)
-                .size(size)
-                .build();
         String ip = request.getRemoteAddr();
         String uri = request.getRequestURI();
         List<Event> events = customBuiltEventRepository.findEventsPublic(criteria);
 
-        List<EventShortDto> result = events.stream().map(EventMapper::mapToShortDto).collect(Collectors.toList());
-
-        if (result.size() > 0) {
-            statsClient.setViewsNumber(result);
-
-            for (EventShortDto event : result) {
-                event.setConfirmedRequests(requestRepository.countAllByEventIdAndStatus(event.getId(),
-                        ParticipationRequestStatus.CONFIRMED));
-            }
+        if (events.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        statsClient.saveHit(uri, ip);
+        List<EventShortDto> result = events.stream()
+                .map(EventMapper::mapToShortDto)
+                .collect(Collectors.toList());
 
-        if (result.size() > 0) {
-            for (EventShortDto event : result) {
-                statsClient.saveHit("/events/" + event.getId(), ip);
-            }
-        } else {
-            return new ArrayList<EventShortDto>();
-        }
-        if (criteria.getSort() == SortEvents.VIEWS) {
-            return result.stream().sorted(Comparator.comparingInt(EventShortDto::getViews)).collect(Collectors.toList());
+        setViewsNumber(result);
+
+        for (EventShortDto event : result) {
+            event.setConfirmedRequests(requestRepository.countAllByEventIdAndStatus(event.getId(), ParticipationRequestStatus.CONFIRMED));
+            statisticClient.saveHit("/events/" + event.getId(), ip);
         }
 
-        return result.stream().sorted(Comparator.comparing(EventShortDto::getEventDate)).collect(Collectors.toList());
+        statisticClient.saveHit(uri, ip);
 
+        return criteria.getSort() == SortEvents.VIEWS ?
+                result.stream().sorted(Comparator.comparingInt(EventShortDto::getViews)).collect(Collectors.toList()) :
+                result.stream().sorted(Comparator.comparing(EventShortDto::getEventDate)).collect(Collectors.toList());
     }
+
 
     @Override
     public EventFullDto getEventById(Long eventId, HttpServletRequest request) {
@@ -108,8 +92,8 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new ObjectNotFoundException("Не найдено опубликованное событие"));
         String ip = request.getRemoteAddr();
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
-        statsClient.saveHit("/events/" + eventId, ip);
-        statsClient.setViewsNumber(eventFullDto);
+        statisticClient.saveHit("/events/" + eventId, ip);
+        setViewsNumber(eventFullDto);
         eventFullDto.setConfirmedRequests(requestRepository.countAllByEventIdAndStatus(event.getId(),
                 ParticipationRequestStatus.CONFIRMED));
 
@@ -121,7 +105,11 @@ public class EventServiceImpl implements EventService {
         int offset = from > 0 ? from / size : 0;
         PageRequest page = PageRequest.of(offset, size);
         List<Event> events = eventRepository.findByInitiatorId(userId, page);
-        return events.stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
+        return events.stream()
+                .map(EventMapper::toEventFullDto)
+                .peek(eventFullDto -> setViewsNumber(eventFullDto))
+                .peek(eventFullDto -> eventFullDto.setConfirmedRequests(requestRepository.countAllByEventIdAndStatus(eventFullDto.getId(), ParticipationRequestStatus.CONFIRMED)))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -132,24 +120,25 @@ public class EventServiceImpl implements EventService {
         }
         LocalDateTime eventDate = newEventDto.getEventDate();
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ConflictException("Cобытие не может быть раньше, чем через два часа от текущего момента!");
+            throw new ConflictException("Событие не может быть раньше, чем через два часа от текущего момента!");
         }
         User user = getUser(userId);
         Location location = getLocation(newEventDto.getLocation());
         locationRepository.save(location);
         Categories categories = getCategoriesIfExist(newEventDto.getCategory());
         Event event = EventMapper.toEvent(newEventDto, categories, location, user);
-        event.setConfirmedRequests(0L);
-        event.setViews(0L);
         event.setCreatedOn(LocalDateTime.now());
         Event result = eventRepository.save(event);
-        return EventMapper.toEventFullDto(result);
+        EventFullDto eventFullDto = EventMapper.toEventFullDto(result);
+        eventFullDto.setConfirmedRequests(0L);
+        eventFullDto.setViews(0L);
+        return eventFullDto;
     }
 
     @Override
     public EventFullDto getEventsByUserId(Long userId, Long eventId) {
         Event event = eventRepository.findByInitiatorIdAndId(userId, eventId).orElseThrow(
-                () -> new ObjectNotFoundException("событие не найдено у пользователя!"));
+                () -> new ObjectNotFoundException("Событие не найдено у пользователя!"));
         return EventMapper.toEventFullDto(event);
     }
 
@@ -177,7 +166,7 @@ public class EventServiceImpl implements EventService {
         EventFullDto eventFullDto = EventMapper.toEventFullDto(toUpdate);
         eventFullDto.setConfirmedRequests(requestRepository.countAllByEventIdAndStatus(event.getId(),
                 ParticipationRequestStatus.CONFIRMED));
-        statsClient.setViewsNumber(eventFullDto);
+        setViewsNumber(eventFullDto);
         return eventFullDto;
     }
 
@@ -248,33 +237,16 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> adminGetEvents(List<Long> userIds, List<State> states, List<Long> categories, String rangeStart, String rangeEnd, Integer from, Integer size) {
-        LocalDateTime start = null;
-        LocalDateTime end = null;
-        if (rangeStart != null) {
-            start = LocalDateTime.parse(rangeStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        }
-        if (rangeEnd != null) {
-            end = LocalDateTime.parse(rangeEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        }
+    public List<EventFullDto> adminGetEvents(Criteria criteria) {
 
-        if (start != null && end != null) {
-            if (start.isAfter(end)) {
-                throw new ValidationException("Дата начала  не может быть после даты завершения.");
-            }
+        if (criteria.getRangeStart() != null && criteria.getRangeEnd() != null && criteria.getRangeStart().isAfter(criteria.getRangeEnd())) {
+            throw new ValidationException(String.format("Дата начала %s позже даты завершения %s.", criteria.getRangeStart(), criteria.getRangeEnd()));
         }
-        Criteria criteria = Criteria.builder()
-                .users(userIds)
-                .states(states)
-                .categories(categories)
-                .from(from)
-                .size(size)
-                .rangeStart(start)
-                .rangeEnd(end)
-                .build();
         List<Event> events = customBuiltEventRepository.getEvents(criteria);
         var result = events.stream().map(EventMapper::toEventFullDto)
-                .map(statsClient::setViewsNumber).collect(Collectors.toList());
+                .peek(eventFullDto -> setViewsNumber(eventFullDto))
+                .peek(eventFullDto -> eventFullDto.setConfirmedRequests(requestRepository.countAllByEventIdAndStatus(eventFullDto.getId(), ParticipationRequestStatus.CONFIRMED)))
+                .collect(Collectors.toList());
 
         return result;
     }
@@ -316,7 +288,7 @@ public class EventServiceImpl implements EventService {
         EventFullDto eventFullDto = EventMapper.toEventFullDto(toUpdate);
         eventFullDto.setConfirmedRequests(requestRepository.countAllByEventIdAndStatus(event.getId(),
                 ParticipationRequestStatus.CONFIRMED));
-        statsClient.setViewsNumber(eventFullDto);
+        setViewsNumber(eventFullDto);
         return eventFullDto;
     }
 
@@ -382,8 +354,50 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new ObjectNotFoundException("Такого мероприятия не существует!"));
     }
 
-    public Categories getCategoriesIfExist(Long catId) {
+    private Categories getCategoriesIfExist(Long catId) {
         return categoriesRepository.findById(catId).orElseThrow(
                 () -> new ObjectNotFoundException("Не найдена выбранная категория"));
+    }
+
+    private EventFullDto setViewsNumber(EventFullDto event) {
+        List<StatsDto> hits = statsClient.getStats(event.getCreatedOn(), LocalDateTime.now(),
+                List.of("/events/" + event.getId()), true);
+        if (!hits.isEmpty()) {
+            event.setViews(hits.get(0).getHits());
+        } else {
+            event.setViews(0L);
+        }
+        return event;
+    }
+
+    private List<EventShortDto> setViewsNumber(List<EventShortDto> events) {
+        List<String> uris = new ArrayList<>();
+        for (EventShortDto eventShortDto : events) {
+            uris.add("/events/" + eventShortDto.getId());
+        }
+
+        List<StatsDto> hits = statsClient.getStats(LocalDateTime.now().minusYears(YEARS_OFFSET),
+                LocalDateTime.now(), uris, true);
+        if (!hits.isEmpty()) {
+            Map<Long, Integer> hitMap = mapHits(hits);
+            for (EventShortDto event : events) {
+                event.setViews(hitMap.getOrDefault(event.getId(), 0));
+            }
+        } else {
+            for (EventShortDto event : events) {
+                event.setViews(0);
+            }
+        }
+        return events;
+    }
+
+    private Map<Long, Integer> mapHits(List<StatsDto> hits) {
+        Map<Long, Integer> hitMap = new HashMap<>();
+        for (var hit : hits) {
+            String hitUri = hit.getUri();
+            Long id = Long.valueOf(hitUri.substring(8));
+            hitMap.put(id, (int) hit.getHits());
+        }
+        return hitMap;
     }
 }

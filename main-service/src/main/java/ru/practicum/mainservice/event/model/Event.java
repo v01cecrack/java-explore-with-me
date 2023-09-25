@@ -48,11 +48,4 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Categories category;
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id")
-    private List<Request> participationRequests;
-    @Transient
-    private Long confirmedRequests;
-    @Transient
-    private Long views;
 }

@@ -3,6 +3,7 @@ package ru.practicum.mainservice.event.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.mainservice.event.dto.CriteriaPublic;
 import ru.practicum.mainservice.event.dto.EventFullDto;
 import ru.practicum.mainservice.event.dto.EventShortDto;
 import ru.practicum.mainservice.event.model.SortEvents;
@@ -49,8 +50,19 @@ public class PublicEventController {
                 throw new ValidationException(String.format("Start date %s is after end date %s.", start, end));
             }
         }
+        CriteriaPublic criteria = CriteriaPublic.builder()
+                .text(text)
+                .categories(categories)
+                .rangeStart(start)
+                .rangeEnd(end)
+                .paid(paid)
+                .onlyAvailable(onlyAvailable)
+                .sort(sort)
+                .from(from)
+                .size(size)
+                .build();
 
-        return eventService.getEvents(text, categories, paid, start, end, onlyAvailable, sort, from, size, request);
+        return eventService.getEvents(criteria, request);
     }
 
     @GetMapping("/{id}")

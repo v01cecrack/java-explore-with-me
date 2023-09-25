@@ -1,13 +1,13 @@
 package ru.practicum.mainservice.event.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import javax.validation.constraints.NotNull;
 
-@Data
+@Getter
+@Setter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class LocationDto {
     @NotNull

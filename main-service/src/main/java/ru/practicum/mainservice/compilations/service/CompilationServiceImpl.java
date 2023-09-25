@@ -4,19 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import ru.practicum.mainservice.categories.dto.CategoriesMapper;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.mainservice.compilations.dto.CompilationDto;
 import ru.practicum.mainservice.compilations.dto.CompilationMapper;
 import ru.practicum.mainservice.compilations.dto.NewCompilationDto;
 import ru.practicum.mainservice.compilations.dto.UpdateCompilationRequest;
 import ru.practicum.mainservice.compilations.model.Compilation;
 import ru.practicum.mainservice.compilations.repository.CompilationRepository;
-import ru.practicum.mainservice.event.dto.EventShortDto;
-import ru.practicum.mainservice.event.dto.mapper.EventMapper;
 import ru.practicum.mainservice.event.model.Event;
 import ru.practicum.mainservice.event.repository.EventRepository;
 import ru.practicum.mainservice.exception.ObjectNotFoundException;
-import ru.practicum.mainservice.users.dto.UserMapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@Transactional
 @RequiredArgsConstructor
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationsRepository;
@@ -46,9 +44,8 @@ public class CompilationServiceImpl implements CompilationService {
             return Collections.emptyList();
         }
         List<CompilationDto> collect = compilations.stream().map(compilation ->
-                CompilationMapper.toCompilationDto(compilation,
-                        maptoDto(compilation.getEvents()))).collect(Collectors.toList());
-        log.info("Запрос GET на получение подборок событий");
+                CompilationMapper.toCompilationDto(compilation)).collect(Collectors.toList());
+        log.info("Получение подборок событий");
 
         return collect;
     }
@@ -61,15 +58,15 @@ public class CompilationServiceImpl implements CompilationService {
         }
         Compilation compilation = CompilationMapper.toCompilation(newCompilationDto, events);
         Compilation result = compilationsRepository.save(compilation);
-        log.info("Запрос POST на добавление новой подборки c id: {}", compilation.getId());
+        log.info("Добавление новой подборки c id: {}", compilation.getId());
 
-        return CompilationMapper.toCompilationDto(result, maptoDto(events));
+        return CompilationMapper.toCompilationDto(result);
     }
 
     @Override
     public void deleteCompilation(Long compId) {
         getCompilation(compId);
-        log.info("Запрос DELETE по удалению подборки c id: {}", compId);
+        log.info("Удаление подборки c id: {}", compId);
         compilationsRepository.deleteById(compId);
     }
 
@@ -92,16 +89,16 @@ public class CompilationServiceImpl implements CompilationService {
         if (request.getEvents() != null) {
             events = eventRepository.findAllById(request.getEvents());
         }
-        log.info("Запрос PATH на изменение подборки событий по id: {}", compId);
+        log.info("Изменение подборки событий по id: {}", compId);
 
-        return CompilationMapper.toCompilationDto(result, maptoDto(events));
+        return CompilationMapper.toCompilationDto(result);
     }
 
     @Override
     public CompilationDto getCompilationsById(Long compId) {
         Compilation compilation = getCompilation(compId);
-        log.info("Запрос GET на получение подборки событий по id: {}", compId);
-        return CompilationMapper.toCompilationDto(compilation, maptoDto(compilation.getEvents()));
+        log.info("Получение подборки событий по id: {}", compId);
+        return CompilationMapper.toCompilationDto(compilation);
     }
 
     private List<Event> getFromId(List<Long> evenIdList) {
@@ -118,16 +115,6 @@ public class CompilationServiceImpl implements CompilationService {
             evenIdList.removeAll(list);
         }
         return events;
-    }
-
-    private List<EventShortDto> maptoDto(List<Event> events) {
-        List<EventShortDto> eventShortDto = events.stream().map(event ->
-                EventMapper.toEventShortDto(
-                        event,
-                        CategoriesMapper.toCategoryDto(event.getCategory()),
-                        UserMapper.toUserDto(event.getInitiator())
-                )).collect(Collectors.toList());
-        return eventShortDto;
     }
 
     private Compilation getCompilation(Long compId) {

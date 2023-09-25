@@ -1,17 +1,15 @@
 package ru.practicum.mainservice.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ru.practicum.mainservice.categories.dto.CategoryDto;
 import ru.practicum.mainservice.event.model.State;
 import ru.practicum.mainservice.users.dto.UserDto;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
