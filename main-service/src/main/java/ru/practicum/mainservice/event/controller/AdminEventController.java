@@ -10,7 +10,6 @@ import ru.practicum.mainservice.event.dto.UpdateEventRequestDto;
 import ru.practicum.mainservice.event.model.State;
 import ru.practicum.mainservice.event.service.EventService;
 
-import javax.validation.ValidationException;
 import javax.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

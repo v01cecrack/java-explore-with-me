@@ -2,7 +2,6 @@ package ru.practicum.mainservice.event.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Value;
 
 import javax.validation.constraints.NotBlank;

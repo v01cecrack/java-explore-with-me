@@ -10,14 +10,9 @@ import ru.practicum.mainservice.event.dto.NewEventDto;
 import ru.practicum.mainservice.event.model.Event;
 import ru.practicum.mainservice.event.model.Location;
 import ru.practicum.mainservice.event.model.State;
-import ru.practicum.mainservice.request.model.ParticipationRequestStatus;
-import ru.practicum.mainservice.request.model.Request;
 import ru.practicum.mainservice.users.dto.UserDto;
 import ru.practicum.mainservice.users.dto.UserMapper;
 import ru.practicum.mainservice.users.model.User;
-
-import java.util.List;
-import java.util.Optional;
 
 @UtilityClass
 public class EventMapper {

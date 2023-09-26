@@ -2,12 +2,10 @@ package ru.practicum.mainservice.event.model;
 
 import lombok.*;
 import ru.practicum.mainservice.categories.model.Categories;
-import ru.practicum.mainservice.request.model.Request;
 import ru.practicum.mainservice.users.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "events")

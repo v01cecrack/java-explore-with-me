@@ -1,12 +1,9 @@
 package ru.practicum.mainservice.event.service;
 
 import ru.practicum.mainservice.event.dto.*;
-import ru.practicum.mainservice.event.model.SortEvents;
-import ru.practicum.mainservice.event.model.State;
 import ru.practicum.mainservice.request.dto.ParticipationRequestDto;
 
 import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventService {

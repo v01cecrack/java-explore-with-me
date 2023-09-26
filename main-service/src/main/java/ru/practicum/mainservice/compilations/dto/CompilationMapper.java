@@ -31,6 +31,7 @@ public class CompilationMapper {
                 .build();
 
     }
+
     private List<EventShortDto> maptoDto(List<Event> events) {
         List<EventShortDto> eventShortDto = events.stream().map(event ->
                 EventMapper.toEventShortDto(
