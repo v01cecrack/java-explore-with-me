@@ -1,7 +1,7 @@
 package ru.practicum.mainservice.event.model;
 
 import lombok.*;
-import ru.practicum.mainservice.categories.model.Categories;
+import ru.practicum.mainservice.categories.model.Category;
 import ru.practicum.mainservice.users.model.User;
 
 import javax.persistence.*;
@@ -45,5 +45,5 @@ public class Event {
     private User initiator;
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
-    private Categories category;
+    private Category category;
 }

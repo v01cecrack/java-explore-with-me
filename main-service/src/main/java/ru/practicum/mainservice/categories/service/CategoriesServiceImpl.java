@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.mainservice.categories.dto.CategoriesMapper;
 import ru.practicum.mainservice.categories.dto.CategoryDto;
 import ru.practicum.mainservice.categories.dto.NewCategoryDto;
-import ru.practicum.mainservice.categories.model.Categories;
+import ru.practicum.mainservice.categories.model.Category;
 import ru.practicum.mainservice.categories.repository.CategoriesRepository;
 import ru.practicum.mainservice.event.repository.EventRepository;
 import ru.practicum.mainservice.exception.ConflictException;
@@ -31,14 +31,14 @@ public class CategoriesServiceImpl implements CategoriesService {
     public List<CategoryDto> getCategories(Integer from, Integer size) {
         int offset = from > 0 ? from / size : 0;
         PageRequest page = PageRequest.of(offset, size);
-        List<Categories> categoriesList = categoriesRepository.findAll(page).getContent();
+        List<Category> categoriesList = categoriesRepository.findAll(page).getContent();
         log.info("Получение списка категорий");
         return categoriesList.stream().map(CategoriesMapper::toCategoryDto).collect(Collectors.toList());
     }
 
     @Override
     public CategoryDto getCategoriesId(Long catId) {
-        Categories categories = getCategoriesIfExist(catId);
+        Category categories = getCategoriesIfExist(catId);
         return CategoriesMapper.toCategoryDto(categories);
     }
 
@@ -47,7 +47,7 @@ public class CategoriesServiceImpl implements CategoriesService {
         if (categoriesRepository.existsCategoriesByName(newCategoryDto.getName())) {
             throw new ConflictException("Такая категория уже есть");
         }
-        Categories categories = categoriesRepository.save(CategoriesMapper.toCategories(newCategoryDto));
+        Category categories = categoriesRepository.save(CategoriesMapper.toCategories(newCategoryDto));
         log.info("Сохранение категории: {}", newCategoryDto.getName());
         return CategoriesMapper.toCategoryDto(categories);
     }
@@ -64,7 +64,7 @@ public class CategoriesServiceImpl implements CategoriesService {
 
     @Override
     public CategoryDto updateCategories(CategoryDto categoryDto) {
-        Categories categories = getCategoriesIfExist(categoryDto.getId());
+        Category categories = getCategoriesIfExist(categoryDto.getId());
         if (categoriesRepository.existsCategoriesByNameAndIdNot(categoryDto.getName(), categoryDto.getId())) {
             throw new ConflictException("Такая категория уже есть");
         }
@@ -73,7 +73,7 @@ public class CategoriesServiceImpl implements CategoriesService {
         return CategoriesMapper.toCategoryDto(categoriesRepository.save(categories));
     }
 
-    private Categories getCategoriesIfExist(Long catId) {
+    private Category getCategoriesIfExist(Long catId) {
         return categoriesRepository.findById(catId).orElseThrow(
                 () -> new ObjectNotFoundException("Не найдена выбранная категория"));
     }

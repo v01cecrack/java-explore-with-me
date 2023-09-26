@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
 import ru.practicum.client.StatsDto;
 import ru.practicum.mainservice.StatisticClient;
-import ru.practicum.mainservice.categories.model.Categories;
+import ru.practicum.mainservice.categories.model.Category;
 import ru.practicum.mainservice.categories.repository.CategoriesRepository;
 import ru.practicum.mainservice.event.dto.*;
 import ru.practicum.mainservice.event.dto.mapper.EventMapper;
@@ -125,7 +125,7 @@ public class EventServiceImpl implements EventService {
         User user = getUser(userId);
         Location location = getLocation(newEventDto.getLocation());
         locationRepository.save(location);
-        Categories categories = getCategoriesIfExist(newEventDto.getCategory());
+        Category categories = getCategoriesIfExist(newEventDto.getCategory());
         Event event = EventMapper.toEvent(newEventDto, categories, location, user);
         event.setCreatedOn(LocalDateTime.now());
         Event result = eventRepository.save(event);
@@ -297,7 +297,7 @@ public class EventServiceImpl implements EventService {
             event.setAnnotation(requestDto.getAnnotation());
         }
         if (requestDto.getCategory() != null) {
-            Categories categories = getCategoriesIfExist(requestDto.getCategory());
+            Category categories = getCategoriesIfExist(requestDto.getCategory());
             event.setCategory(categories);
         }
         if (requestDto.getDescription() != null) {
@@ -354,7 +354,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new ObjectNotFoundException("Такого мероприятия не существует!"));
     }
 
-    private Categories getCategoriesIfExist(Long catId) {
+    private Category getCategoriesIfExist(Long catId) {
         return categoriesRepository.findById(catId).orElseThrow(
                 () -> new ObjectNotFoundException("Не найдена выбранная категория"));
     }

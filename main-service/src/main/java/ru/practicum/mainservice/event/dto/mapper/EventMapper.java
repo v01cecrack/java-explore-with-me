@@ -3,7 +3,7 @@ package ru.practicum.mainservice.event.dto.mapper;
 import lombok.experimental.UtilityClass;
 import ru.practicum.mainservice.categories.dto.CategoriesMapper;
 import ru.practicum.mainservice.categories.dto.CategoryDto;
-import ru.practicum.mainservice.categories.model.Categories;
+import ru.practicum.mainservice.categories.model.Category;
 import ru.practicum.mainservice.event.dto.EventFullDto;
 import ru.practicum.mainservice.event.dto.EventShortDto;
 import ru.practicum.mainservice.event.dto.NewEventDto;
@@ -62,7 +62,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static Event toEvent(NewEventDto newEventDto, Categories categories, Location location, User user) {
+    public static Event toEvent(NewEventDto newEventDto, Category categories, Location location, User user) {
         return Event.builder()
                 .annotation(newEventDto.getAnnotation())
                 .category(categories)
