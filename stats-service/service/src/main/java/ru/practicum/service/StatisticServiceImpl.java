@@ -6,8 +6,9 @@ import org.springframework.stereotype.Service;
 import ru.practicum.service.dto.HitDto;
 import ru.practicum.service.dto.StatisticDto;
 import ru.practicum.service.dto.StatsDto;
+import ru.practicum.service.exception.ValidationException;
 
-import javax.validation.ValidationException;
+
 import java.util.List;
 
 @Service
