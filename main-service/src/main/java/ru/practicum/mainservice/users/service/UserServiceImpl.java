@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
         } else {
             users = userRepository.findByIdIn(ids, page);
         }
-        log.info("Запрос GET на поиск пользователей, с ids: {}", ids);
+        log.info("Поиск пользователей, с ids: {}", ids);
 
         return users.stream().map(UserMapper::toUserDto).collect(Collectors.toList());
     }
@@ -44,7 +44,7 @@ public class UserServiceImpl implements UserService {
             throw new ConflictException("Такой пользователь уже есть");
         }
         User user = UserMapper.toUser(userRequestDto);
-        log.info("Запрос POST на сохранение пользователя: {}", user.getName());
+        log.info("Сохранение пользователя: {}", user.getName());
         return UserMapper.toUserDto(userRepository.save(user));
     }
 
@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
         if (!isUserExists(userId)) {
             throw new ObjectNotFoundException("Пользователя не существует!");
         }
-        log.info("Запрос DELETE на удаление пользователя: c id: {}", userId);
+        log.info("Удаление пользователя: c id: {}", userId);
         userRepository.deleteById(userId);
     }
 

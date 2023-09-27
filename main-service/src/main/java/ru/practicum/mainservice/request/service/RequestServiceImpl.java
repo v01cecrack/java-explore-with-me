@@ -34,7 +34,7 @@ public class RequestServiceImpl implements RequestService {
     public List<ParticipationRequestDto> getRequest(Long userId) {
         getUserById(userId);
         List<Request> requestsList = requestsRepository.findByRequesterId(userId);
-        log.info("Запрос GET на поиск о заявках текущего пользователя, с ids: {}", userId);
+        log.info("Поиск о заявках текущего пользователя, с ids: {}", userId);
         return requestsList.stream().map(RequestMapper::toRequestDto).collect(Collectors.toList());
     }
 
@@ -74,7 +74,7 @@ public class RequestServiceImpl implements RequestService {
         } else {
             request.setStatus(ParticipationRequestStatus.PENDING);
         }
-        log.info("Запрос create на добавление запроса от текущего пользователя на участие в событии, с ids: {}", userId);
+        log.info("Добавление запроса от текущего пользователя на участие в событии, с ids: {}", userId);
 
         return RequestMapper.toRequestDto(requestsRepository.save(request));
     }
@@ -87,7 +87,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ConflictException("Можно отменить только свой запрос на участие!");
         }
         request.setStatus(ParticipationRequestStatus.CANCELED);
-        log.info("Запрос PATH на отмену своего запроса на участие в событии, с ids: {} {}", userId, requestId);
+        log.info("Отмена своего запроса на участие в событии, с ids: {} {}", userId, requestId);
         return RequestMapper.toRequestDto(requestsRepository.save(request));
     }
 
