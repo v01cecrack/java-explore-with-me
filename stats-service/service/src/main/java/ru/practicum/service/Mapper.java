@@ -2,6 +2,7 @@ package ru.practicum.service;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.service.dto.HitDto;
+import ru.practicum.service.dto.StatsDto;
 
 @UtilityClass
 public class Mapper {
@@ -13,4 +14,5 @@ public class Mapper {
                 .timestamp(hitDto.getTimestamp())
                 .build();
     }
+
 }
