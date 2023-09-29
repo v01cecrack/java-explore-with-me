@@ -622,7 +622,7 @@
               "pm.test(\"Проверка поля 'text'\", function () {\r",
               "    var jsonData = pm.response.json();\r",
               "    pm.expect(jsonData).to.have.property('text');\r",
-              "    pm.expect(jsonData.text, '\"text\" должен быть равен \"Пользователь редактирует свой комментарий\"').to.eql('Пользователь редактиурет свой комментарий')\r",
+              "    pm.expect(jsonData.text, '\"text\" должен быть равен \"Пользователь редактирует свой комментарий\"').to.eql('Пользователь редактирует свой комментарий')\r",
               "});"
             ],
             "type": "text/javascript"
