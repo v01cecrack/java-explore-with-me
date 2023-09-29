@@ -73,6 +73,12 @@ public class EventServiceImpl implements EventService {
 
         setViewsNumber(result);
 
+
+        for (EventShortDto event : result) {
+            event.setConfirmedRequests(requestRepository.countAllByEventIdAndStatus(event.getId(),
+                    ParticipationRequestStatus.CONFIRMED));
+        }
+
         statisticClient.saveHit(uri, ip);
 
         return criteria.getSort() == SortEvents.VIEWS ?
