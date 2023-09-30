@@ -45,13 +45,6 @@ public class CommentController {
         return commentService.updateComment(userId, commentId, commentDto);
     }
 
-    @DeleteMapping("/admin/comments/{commentId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void adminDeleteComment(@PathVariable Long commentId) {
-        log.info("DELETE запрос на удаление администратором пользовательского комментария с ID = {}", commentId);
-        commentService.adminDeleteComment(commentId);
-    }
-
     @DeleteMapping("/public/comments/{userId}/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void userDeleteComment(@PathVariable Long userId, @PathVariable Long commentId) {

@@ -74,10 +74,15 @@ public class EventServiceImpl implements EventService {
         setViewsNumber(result);
 
 
-        for (EventShortDto event : result) {
-            event.setConfirmedRequests(requestRepository.countAllByEventIdAndStatus(event.getId(),
-                    ParticipationRequestStatus.CONFIRMED));
-        }
+        List<Request> allRequests = requestRepository.findAllByEventInAndStatus(events, ParticipationRequestStatus.CONFIRMED);
+
+        Map<Long, Long> countRequestsByEventId = allRequests.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getEvent().getId(),
+                        Collectors.counting()
+                ));
+
+        result.forEach(event -> event.setConfirmedRequests(countRequestsByEventId.getOrDefault(event.getId(), 0L)));
 
         statisticClient.saveHit(uri, ip);
 
